@@ -60,10 +60,10 @@ def apply_screw_logic(detected_list):
             
     return {"brand": "Unknown Hardware", "system": "No Logic Match", "diameter": "--", "feature": raw_output}
 
-# send our front end file
+# make sure our API is running as intended
 @app.route('/')
-def serve_frontend():
-    return send_file('index.html')
+def health_check():
+    return jsonify({"status": "PediScan API is live and running!"})
 
 
 @app.route('/scan', methods=['POST'])
