@@ -12,6 +12,7 @@ CORS(app)
 
 model = YOLO('best.pt') 
 
+#define a simple sqlite3 database for current testing and MVP
 def init_db():
     conn = sqlite3.connect('inventory.db')
     c = conn.cursor()
@@ -29,7 +30,8 @@ def init_db():
     conn.commit()
     conn.close()
 
-# The logic of our program that determines company based on colors returned from the model
+# The logic of our program that determines company based on 
+# colors and sections of the screw returned from the ML model
 def apply_screw_logic(detected_list):
     detected = set(detected_list) 
     raw_output = ", ".join(detected_list)
@@ -37,23 +39,25 @@ def apply_screw_logic(detected_list):
     if "head_green" in detected:
         return {"brand": "OIC", "system": "Standard", "diameter": "5.5mm", "feature": raw_output}
     
-    if "head_blue" in detected or "head_darkblue" in detected:
+    if "head_blue" in detected:
+            return {"brand": "Orthomed", "system": "Modular", "diameter": "6.5mm", "feature": raw_output}
+    if "head_darkblue" in detected:
         if "setscrew_gold" in detected:
             return {"brand": "Orthomed", "system": "Standard (Non-Modular)", "diameter": "6.5mm", "feature": raw_output}
-        elif "setscrew_star_blue" in detected:
-            return {"brand": "Orthomed", "system": "Modular", "diameter": "6.5mm", "feature": raw_output}
         elif "shaft_grey" in detected:
             return {"brand": "Orthomed", "system": "Standard (Non-Modular)", "diameter": "6.5mm", "feature": raw_output}
-        elif "shaft_lightblue" in detected or "shaft_silver" in detected or "shaft_blue" in detected:
+        elif "shaft_lightblue" in detected:
             return {"brand": "Orthomed", "system": "Modular", "diameter": "6.5mm", "feature": raw_output}
             
-    if "head_silver" in detected and "shaft_purple" in detected:
-        return {"brand": "NuVasive", "system": "Non-Modular", "diameter": "Purple Sizing", "feature": raw_output}
-        
-    if "head_grey" in detected:
-        if "shaft_purple" in detected and "neck_seam" in detected:
+    if "shaft_purple" in detected:
+        if "head_silver" in detected:
+            return {"brand": "NuVasive", "system": "Non-Modular", "diameter": "Purple Sizing", "feature": raw_output}
+        if "head_grey" in detected:
             return {"brand": "NuVasive", "system": "Modular", "diameter": "Purple Sizing", "feature": raw_output}
-        elif "shaft_blue" in detected or ("shaft_purple" in detected and "setscrew_silver" in detected):
+        return {"brand": "NuVasive", "system": "Unknown", "diameter": "Purple Sizing", "feature": raw_output}
+
+    if "head_grey" in detected:
+        if "shaft_blue" in detected 
             return {"brand": "Depuy", "system": "Standard", "diameter": "Varies", "feature": raw_output}
         elif "shaft_silver" in detected or "shaft_grey" in detected:
             return {"brand": "Mindray", "system": "Standard", "diameter": "6.5mm", "feature": raw_output}
@@ -116,7 +120,7 @@ def save_scan():
         conn.commit()
         conn.close()
         
-        print(f"✅ User Confirmed & Saved to DB: {data['brand']}")
+        print(f" User Confirmed & Saved to DB: {data['brand']}")
         return jsonify({'status': 'success'})
         
     except Exception as e:
