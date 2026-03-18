@@ -57,7 +57,7 @@ def apply_screw_logic(detected_list):
         return {"brand": "NuVasive", "system": "Unknown", "diameter": "Purple Sizing", "feature": raw_output}
 
     if "head_grey" in detected:
-        if "shaft_blue" in detected 
+        if "shaft_blue" in detected:
             return {"brand": "Depuy", "system": "Standard", "diameter": "Varies", "feature": raw_output}
         elif "shaft_silver" in detected or "shaft_grey" in detected:
             return {"brand": "Mindray", "system": "Standard", "diameter": "6.5mm", "feature": raw_output}
