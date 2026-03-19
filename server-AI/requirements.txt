@@ -3,3 +3,4 @@ flask-cors
 ultralytics
 opencv-python-headless
 gunicorn
+google-cloud-vision
