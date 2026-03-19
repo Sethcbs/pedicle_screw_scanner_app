@@ -72,15 +72,13 @@ def health_check():
     return jsonify({"status": "PediScan API is live and running!"})
 
 def extract_text_from_image(cv2_image):
-    # Convert the OpenCV image array to a byte string for Google
     success, encoded_image = cv2.imencode('.jpg', cv2_image)
     content = encoded_image.tobytes()
 
-    # Initialize the Google Vision Client
+    # initialize Google Vision
     client = vision.ImageAnnotatorClient()
     image = vision.Image(content=content)
 
-    # Call the text detection API
     response = client.text_detection(image=image)
     texts = response.text_annotations
 
@@ -88,7 +86,7 @@ def extract_text_from_image(cv2_image):
         print(f"Google Vision Error: {response.error.message}")
         return ""
 
-    # The first item in the list is the entire block of detected text
+    # first item in the list is the entire block of detected text
     if texts:
         return texts[0].description.replace('\n', ' ').strip()
 
@@ -144,9 +142,27 @@ def scan_image():
         elif "solera" in detected_text.lower():
             brand = "Medtronic"
             system = "Solera"
-        elif "setscrew" in detected_text.lower():
+        elif "setscrew" in detected_classes:  
             brand = "Review Required"
             system = "Possibly Globus/Medtronic"
+
+        annotated_img = results[0].plot()
+        _, buffer = cv2.imencode('.jpg', annotated_img)
+        annotated_base64 = base64.b64encode(buffer).decode('utf-8')
+        annotated_data_url = f"data:image/jpeg;base64,{annotated_base64}"
+
+        raw_output = ", ".join(detected_classes)
+        final_result = {
+            "brand": brand,
+            "system": system,
+            "diameter": detected_text if detected_text else "No text read",
+            "feature": raw_output
+        }
+
+        return jsonify({
+            'result': final_result,
+            'annotated_image': annotated_data_url
+        })
 
     except Exception as e:
         print(f"Error processing image: {e}")
