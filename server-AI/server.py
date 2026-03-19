@@ -1,6 +1,8 @@
+from google.cloud import vision
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 from ultralytics import YOLO
+import io
 import cv2
 import numpy as np
 import base64
@@ -10,7 +12,7 @@ from datetime import datetime
 app = Flask(__name__)
 CORS(app)
 
-model = YOLO('best.pt') 
+model = YOLO('v3-best.pt') 
 
 #define a simple sqlite3 database for current testing and MVP
 def init_db():
@@ -69,6 +71,28 @@ def apply_screw_logic(detected_list):
 def health_check():
     return jsonify({"status": "PediScan API is live and running!"})
 
+def extract_text_from_image(cv2_image):
+    # Convert the OpenCV image array to a byte string for Google
+    success, encoded_image = cv2.imencode('.jpg', cv2_image)
+    content = encoded_image.tobytes()
+
+    # Initialize the Google Vision Client
+    client = vision.ImageAnnotatorClient()
+    image = vision.Image(content=content)
+
+    # Call the text detection API
+    response = client.text_detection(image=image)
+    texts = response.text_annotations
+
+    if response.error.message:
+        print(f"Google Vision Error: {response.error.message}")
+        return ""
+
+    # The first item in the list is the entire block of detected text
+    if texts:
+        return texts[0].description.replace('\n', ' ').strip()
+
+    return ""
 
 @app.route('/scan', methods=['POST'])
 def scan_image():
@@ -82,24 +106,47 @@ def scan_image():
 
         results = model(img, conf=0.25) 
         
-        annotated_img = results[0].plot()
+        img_h, img_w, _ = img.shape
         
-        _, buffer = cv2.imencode('.jpg', annotated_img)
-        annotated_base64 = base64.b64encode(buffer).decode('utf-8')
-        annotated_data_url = f"data:image/jpeg;base64,{annotated_base64}"
-
-        names_dict = model.names
         detected_classes = []
-        for r in results:
-            for c in r.boxes.cls:
-                detected_classes.append(names_dict[int(c)])
+        cropped_img = None
+        
+        for box in results[0].boxes:
+            cls_id = int(box.cls[0])
+            class_name = model.names[cls_id]
+            detected_classes.append(class_name)
+            
+            if class_name in ["tulip_head", "setscrew"]:
+                x1, y1, x2, y2 = map(int, box.xyxy[0])
+                
+                margin = 15
+                
+                crop_y1 = max(0, y1 - margin)
+                crop_y2 = min(img_h, y2 + margin)
+                crop_x1 = max(0, x1 - margin)
+                crop_x2 = min(img_w, x2 + margin)
+                
+                cropped_img = img[crop_y1:crop_y2, crop_x1:crop_x2]
+                
+        detected_text = ""
+        if cropped_img is not None:
+            detected_text = extract_text_from_image(cropped_img)
+            print(f"OCR Found on Crop: {detected_text}")
+        else:
+            print("No valid hardware found to crop.")
 
-        final_result = apply_screw_logic(detected_classes)
+        brand = "Unknown"
+        system = "Unknown"
 
-        return jsonify({
-            'result': final_result,
-            'annotated_image': annotated_data_url
-        })
+        if "creo" in detected_text.lower():
+            brand = "Globus Medical"
+            system = "Creo"
+        elif "solera" in detected_text.lower():
+            brand = "Medtronic"
+            system = "Solera"
+        elif "setscrew" in detected_text.lower():
+            brand = "Review Required"
+            system = "Possibly Globus/Medtronic"
 
     except Exception as e:
         print(f"Error processing image: {e}")
