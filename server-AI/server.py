@@ -8,6 +8,9 @@ import numpy as np
 import base64
 import sqlite3
 from datetime import datetime 
+import torch
+
+torch.set_num_threads(1)
 
 app = Flask(__name__)
 CORS(app)
@@ -31,8 +34,6 @@ def init_db():
     ''')
     conn.commit()
     conn.close()
-
-init_db()
 
 # The logic of our program that determines company based on 
 # colors and sections of the screw returned from the ML model
@@ -105,8 +106,8 @@ def scan_image():
         img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
 
         h, w = img.shape[:2]
-        if max(h, w) > 800:
-            scale = 800 / max(h, w)
+        if max(h, w) > 640:
+            scale = 640 / max(h, w)
             img = cv2.resize(img, (int(w * scale), int(h * scale)))
 
         results = model(img, conf=0.25) 
