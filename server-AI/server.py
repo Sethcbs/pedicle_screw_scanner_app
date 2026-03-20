@@ -180,8 +180,9 @@ def scan_image():
 @app.route('/save', methods=['POST'])
 def save_scan():
     try:
+        init_db()
+
         data = request.json # the hardware details sent from the phone
-        
         conn = sqlite3.connect('inventory.db')
         c = conn.cursor()
         timestamp = datetime.now().strftime("%Y-%m-%d %I:%M %p")
@@ -202,6 +203,8 @@ def save_scan():
 @app.route('/history', methods=['GET'])
 def get_history():
     try:
+        init_db()
+
         conn = sqlite3.connect('inventory.db')
         c = conn.cursor()
         # grab the 50 most recent scans
