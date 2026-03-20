@@ -32,6 +32,8 @@ def init_db():
     conn.commit()
     conn.close()
 
+init_db()
+
 # The logic of our program that determines company based on 
 # colors and sections of the screw returned from the ML model
 def apply_screw_logic(detected_list):
