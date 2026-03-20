@@ -146,15 +146,14 @@ def scan_image():
         brand = "Unknown"
         system = "Unknown"
 
-        if "creo" in detected_text.lower():
-            brand = "Globus Medical"
-            system = "Creo"
-        elif "solera" in detected_text.lower():
-            brand = "Medtronic"
-            system = "Solera"
-        elif "setscrew" in detected_classes:  
-            brand = "Review Required"
-            system = "Possibly Globus/Medtronic"
+        if "161/111 JP23143" in detected_text.lower():
+            brand = "Nuvasive"
+            system = "Modular"
+
+        else
+            fallback = apply_screw_logic(detected_classes)
+            brand = fallback["brand"]
+            system = fallback["system"]
 
         annotated_img = results[0].plot()
         _, buffer = cv2.imencode('.jpg', annotated_img)
