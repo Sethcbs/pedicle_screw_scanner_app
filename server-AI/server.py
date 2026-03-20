@@ -44,7 +44,7 @@ def apply_screw_logic(detected_list):
     if "head_green" in detected:
         return {"brand": "OIC", "system": "Standard", "diameter": "5.5mm", "feature": raw_output}
     
-    if "head_blue" in detected:
+    if "head_blue" in detected and "shaft_lightblue" in detected:
             return {"brand": "Orthomed", "system": "Modular", "diameter": "6.5mm", "feature": raw_output}
     if "head_darkblue" in detected:
         if "setscrew_gold" in detected:
@@ -57,7 +57,7 @@ def apply_screw_logic(detected_list):
     if "shaft_purple" in detected:
         if "head_silver" in detected:
             return {"brand": "NuVasive", "system": "Non-Modular", "diameter": "Purple Sizing", "feature": raw_output}
-        if "head_grey" in detected:
+        elif "head_grey" in detected:
             return {"brand": "NuVasive", "system": "Modular", "diameter": "Purple Sizing", "feature": raw_output}
         return {"brand": "NuVasive", "system": "Unknown", "diameter": "Purple Sizing", "feature": raw_output}
 
@@ -66,6 +66,8 @@ def apply_screw_logic(detected_list):
             return {"brand": "Depuy", "system": "Standard", "diameter": "Varies", "feature": raw_output}
         elif "shaft_silver" in detected or "shaft_grey" in detected:
             return {"brand": "Mindray", "system": "Standard", "diameter": "6.5mm", "feature": raw_output}
+        elif "shaft_purple" in detected:
+            return {"brand": "NuVasive", "system": "Modular", "diameter": "Purple Sizing", "feature": raw_output}
             
     return {"brand": "Unknown Hardware", "system": "No Logic Match", "diameter": "--", "feature": raw_output}
 
