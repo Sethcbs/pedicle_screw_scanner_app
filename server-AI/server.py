@@ -150,7 +150,7 @@ def scan_image():
             brand = "Nuvasive"
             system = "Modular"
 
-        else
+        else:
             fallback = apply_screw_logic(detected_classes)
             brand = fallback["brand"]
             system = fallback["system"]
