@@ -108,8 +108,8 @@ def scan_image():
         img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
 
         h, w = img.shape[:2]
-        if max(h, w) > 640:
-            scale = 640 / max(h, w)
+        if max(h, w) > 480:
+            scale = 480/ max(h, w)
             img = cv2.resize(img, (int(w * scale), int(h * scale)))
 
         results = model(img, conf=0.25) 
